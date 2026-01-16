@@ -3,9 +3,18 @@
 #include <ctime>
 #include <cstdlib>
 #include <cctype>
+#include <algorithm> 
+#include <limits>
 using namespace std;
 
 enum AccountType { SAVINGS, CURRENT };
+enum IDType {
+    ID_AADHAAR,
+    ID_PAN,
+    ID_PASSPORT,
+    ID_VOTER,
+    ID_DL
+};
 
 class BankAccount {
 private:
@@ -14,8 +23,8 @@ private:
     string password;
     int pin;
     string securityAnswer;
-    string aadhaar;
-    string pan;
+    IDType idType;
+    string idNumber;
     AccountType type;
     double balance;
 
@@ -51,13 +60,80 @@ public:
         return p >= 1000 && p <= 9999;
     }
 
-    bool isValidAadhaar(string a) {
-        return a.length() == 12;
+    void selectIDProof() {
+    int choice;
+    bool valid = false;
+
+    cout << "\nSelect ID Proof:\n";
+    cout << "1.Aadhaar\n2.PAN\n3.Passport\n4.Voter ID\n5.Driving License\nChoice: ";
+    cin >> choice;
+
+
+    cout << "Enter ID Number: ";
+    cin >> idNumber;
+
+    switch (choice) {
+        case 1:
+            idType = ID_AADHAAR;
+            valid = isValidAadhaar(idNumber);
+            break;
+        case 2:
+            idType = ID_PAN;
+            valid = isValidPAN(idNumber);
+            break;
+        case 3:
+            idType = ID_PASSPORT;
+            valid = isValidPassport(idNumber);
+            break;
+        case 4:
+            idType = ID_VOTER;
+            valid = isValidVoterID(idNumber);
+            break;
+        case 5:
+            idType = ID_DL;
+            valid = isValidDrivingLicense(idNumber);
+            break;
+        default:
+            cout << "Invalid choice!\n";
+            return;
     }
 
-    bool isValidPAN(string p) {
-        return p.length() == 10;
+    while (!valid) {
+        cout << "Invalid ID! Re-enter: ";
+        cin >> idNumber;
+
+        if (idType == ID_AADHAAR) valid = isValidAadhaar(idNumber);
+        else if (idType == ID_PAN) valid = isValidPAN(idNumber);
+        else if (idType == ID_PASSPORT) valid = isValidPassport(idNumber);
+        else if (idType == ID_VOTER) valid = isValidVoterID(idNumber);
+        else if (idType == ID_DL) valid = isValidDrivingLicense(idNumber);
     }
+}
+
+    bool isValidAadhaar(string a) {
+    return a.length() == 12 && all_of(a.begin(), a.end(), ::isdigit);
+}
+
+bool isValidPAN(string p) {
+    if (p.length() != 10) return false;
+    return isupper(p[0]) && isupper(p[1]) && isupper(p[2]) &&
+           isupper(p[3]) && isupper(p[4]) &&
+           isdigit(p[5]) && isdigit(p[6]) && isdigit(p[7]) &&
+           isdigit(p[8]) &&
+           isupper(p[9]);
+}
+
+bool isValidPassport(string p) {
+    return p.length() >= 8 && p.length() <= 9;
+}
+
+bool isValidVoterID(string v) {
+    return v.length() == 10;
+}
+
+bool isValidDrivingLicense(string d) {
+    return d.length() >= 10 && d.length() <= 16;
+}
 
     // OTP 
     int generateOTP() {
@@ -105,19 +181,8 @@ public:
             cin >> pin;
         }
 
-        cout << "Enter Aadhaar (12 digits): ";
-        cin >> aadhaar;
-        while (!isValidAadhaar(aadhaar)) {
-            cout << "Invalid Aadhaar! Re-enter: ";
-            cin >> aadhaar;
-        }
-
-        cout << "Enter PAN (10 characters): ";
-        cin >> pan;
-        while (!isValidPAN(pan)) {
-            cout << "Invalid PAN! Re-enter: ";
-            cin >> pan;
-        }
+        //  SELECT ANY ONE ID PROOF
+        selectIDProof();
 
         cout << "Security Question (favorite color): ";
         cin >> securityAnswer;
